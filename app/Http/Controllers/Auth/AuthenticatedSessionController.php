@@ -37,7 +37,7 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('tecnico.dashboard');  // Redirigir al dashboard del técnico de soporte
         }
 
-        return redirect()->route('dashboard');
+        return redirect()->route('tecnico.dashboard');
     }
 
     /**

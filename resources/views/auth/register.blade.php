@@ -27,6 +27,7 @@
                     <option value="">--Selecciona un Rol--</option>
                     <option value="Administrador">Administrador</option>
                     <option value="Técnico de soporte">Técnico de soporte</option>
+                    
                 </select>
             
                 <x-input-error :messages="$errors->get('rol')" class="mt-2" />
