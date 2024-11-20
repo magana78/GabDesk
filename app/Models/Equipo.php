@@ -55,6 +55,11 @@ class Equipo extends Model
 		return $this->belongsToMany(Dispositivo::class, 'equipodispositivo', 'id_equipo', 'id_dispositivo');
 	}
 
+	public function imagenes()
+	{
+		return $this->hasMany(Imagenesequipo::class, 'id_equipo');
+	}
+
 	public function imagenesequipos()
 	{
 		return $this->hasMany(Imagenesequipo::class, 'id_equipo');

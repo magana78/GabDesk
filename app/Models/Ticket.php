@@ -77,6 +77,16 @@ class Ticket extends Model
 		return $this->belongsTo(Usuario::class, 'id_usuario_reportante');
 	}
 
+	public function usuarioReportante()
+	{
+		return $this->belongsTo(Usuario::class, 'id_usuario_reportante');
+	}
+
+	public function usuarioAsignado()
+	{
+		return $this->belongsTo(Usuario::class, 'id_usuario_asignado');
+	}
+
 	public function equipo()
 	{
 		return $this->belongsTo(Equipo::class, 'id_equipo');
