@@ -17,27 +17,82 @@ class AuthAndroidController extends Controller
 {
     // Método de autenticación básica
     public function login(Request $request)
-    {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required'
-        ]);
+{
+    $request->validate([
+        'email' => 'required|email',
+        'password' => 'required',
+    ]);
 
-        // Verifica si el usuario puede iniciar sesión
-        if (Auth::attempt($request->only('email', 'password'))) {
-            $user = Usuario::with([
-                'departamento',
-                'cubiculo.ubicacione.area',
-                'equipos.dispositivos.accesorios',
-                'equipos.imagenes'
-            ])->where('id_usuario', Auth::id())->first();
+    // Verifica si las credenciales son válidas
+    if (Auth::attempt($request->only('email', 'password'))) {
+        // Obtiene el usuario autenticado con relaciones necesarias
+        $user = Usuario::with([
+            'departamento',
+            'cubiculo.ubicacione.area',
+            'equipos.dispositivos.accesorios',
+            'equipos.imagenes'
+        ])->where('id_usuario', Auth::id())->first();
 
-            return response()->json(['success' => true, 'user' => $user]);
+        // Verifica si el usuario tiene el rol de supervisor (id_rol = 2)
+        if (!$user->roles->contains('id_rol', 2)) {
+            Auth::logout(); // Cierra la sesión si no es supervisor
+            return response()->json([
+                'success' => false,
+                'message' => 'Acceso denegado. Solo los supervisores pueden iniciar sesión.',
+                'user' => null
+            ], 403);
         }
 
-        // Respuesta si las credenciales son inválidas
-        return response()->json(['success' => false, 'message' => 'Credenciales inválidas.']);
+        // Estructura el usuario en el formato esperado por la app
+        return response()->json([
+            'success' => true,
+            'user' => [
+                'id_usuario' => $user->id_usuario,
+                'nombre' => $user->nombre,
+                'email' => $user->email,
+                'estado' => $user->estado,
+                'id_departamento' => $user->id_departamento,
+                'id_cubiculo' => $user->id_cubiculo,
+                'departamento' => $user->departamento,
+                'cubiculo' => $user->cubiculo,
+                'equipos' => $user->equipos->map(function ($equipo) {
+                    return [
+                        'id_equipo' => $equipo->id_equipo,
+                        'nombre_equipo' => $equipo->nombre_equipo,
+                        'descripcion' => $equipo->descripcion,
+                        'numero_serie' => $equipo->numero_serie,
+                        'estado_equipo' => $equipo->estado_equipo,
+                        'id_usuario_asignado' => $equipo->id_usuario_asignado,
+                        'pivot' => $equipo->pivot,
+                        'dispositivos' => $equipo->dispositivos->map(function ($dispositivo) {
+                            return [
+                                'id_dispositivo' => $dispositivo->id_dispositivo,
+                                'tipo_dispositivo' => $dispositivo->tipo_dispositivo,
+                                'marca' => $dispositivo->marca,
+                                'modelo' => $dispositivo->modelo,
+                                'estado_dispositivo' => $dispositivo->estado_dispositivo,
+                                'cantidad' => $dispositivo->cantidad,
+                                'id_ubicacion' => $dispositivo->id_ubicacion,
+                                'pivot' => $dispositivo->pivot,
+                                'accesorios' => $dispositivo->accesorios
+                            ];
+                        }),
+                        'imagenes' => $equipo->imagenes
+                    ];
+                })
+            ],
+            'message' => null
+        ], 200);
     }
+
+    // Respuesta si las credenciales son inválidas
+    return response()->json([
+        'success' => false,
+        'message' => 'Credenciales inválidas.',
+        'user' => null
+    ], 401);
+}
+
 
     // Método para obtener los equipos del usuario, junto con dispositivos y accesorios
     public function getEquiposPorArea($areaId)
