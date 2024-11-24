@@ -11,15 +11,36 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <!-- Campo de búsqueda -->
-                <form action="{{ route('admin.tickets.index') }}" method="GET" class="mb-4">
-                    <input type="text" name="search" placeholder="Buscar tickets..." 
-                           value="{{ request('search') }}" 
-                           class="w-full p-2 rounded-lg border border-gray-400 dark:border-gray-700 dark:bg-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-[#00CFFF]">
-                    <button type="submit" class="bg-[#00CFFF] hover:bg-[#009FCC] text-white px-4 py-2 rounded-lg mt-2 transition duration-150">
-                        Buscar
-                    </button>
-                </form>
-
+                
+                <div class="flex flex-col md:flex-row justify-end items-center gap-4 mb-6">
+                    <form action="{{ route('admin.tickets.index') }}" method="GET" class="flex items-center">
+                        <!-- Campo de búsqueda -->
+                        <div class="relative w-full md:w-72">
+                            <input type="text" name="search" id="search-input" placeholder="Buscar tickets..." 
+                                   value="{{ request('search') }}" 
+                                   class="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-[#00CFFF] placeholder-gray-400 text-sm transition">
+                            <!-- Icono de búsqueda -->
+                            <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 text-gray-400">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <!-- Botón de buscar -->
+                        <button type="submit" class="ml-4 bg-[#00CFFF] hover:bg-[#009FCC] text-white font-semibold px-5 py-2 rounded-lg shadow-md transition duration-150">
+                            Buscar
+                        </button>
+                        <!-- Botón de limpiar -->
+                        @if(request('search'))
+                        <a href="{{ route('admin.tickets.index') }}" 
+                           class="ml-2 bg-red-500 hover:bg-red-600 text-white font-semibold px-5 py-2 rounded-lg shadow-md transition duration-150">
+                            Limpiar
+                        </a>
+                        @endif
+                    </form>
+                </div>
+                
+            
                 <!-- Tabla de tickets -->
                 <table class="min-w-full bg-white dark:bg-gray-800">
                     <thead class="bg-[#00CFFF] text-white">

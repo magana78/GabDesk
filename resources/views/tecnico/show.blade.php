@@ -23,69 +23,127 @@
                   <!-- Mostrar información adicional de Departamento, Área, Ubicación y Cubículo -->
                     <!-- Mostrar información adicional relacionada con el usuario técnico -->
                     <div class="informacion-tecnico">
-                        <p><strong>Departamento:</strong> <span id="tecnico-departamento">Cargando...</span></p>
-                        <p><strong>Área:</strong> <span id="tecnico-area">Cargando...</span></p>
-                        <p><strong>Ubicación:</strong> <span id="tecnico-ubicacion">Cargando...</span></p>
-                        <p><strong>Cubículo:</strong> <span id="tecnico-cubiculo">Cargando...</span></p>
+                        <div class="informacion-tecnico mt-6 p-6 bg-white shadow-lg rounded-lg border border-gray-300">
+                            <h4 class="text-xl font-semibold text-gray-800 mb-4">Detalles del Usuario Asignado al Equipo</h4>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p class="text-sm text-gray-600"><strong>Nombre:</strong></p>
+                                    <p id="tecnico-nombre" class="text-lg text-gray-800 font-medium">Cargando...</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600"><strong>Email:</strong></p>
+                                    <p id="tecnico-email" class="text-lg text-gray-800 font-medium">Cargando...</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600"><strong>Departamento:</strong></p>
+                                    <p id="tecnico-departamento" class="text-lg text-gray-800 font-medium">Cargando...</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600"><strong>Área:</strong></p>
+                                    <p id="tecnico-area" class="text-lg text-gray-800 font-medium">Cargando...</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600"><strong>Ubicación:</strong></p>
+                                    <p id="tecnico-ubicacion" class="text-lg text-gray-800 font-medium">Cargando...</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600"><strong>Cubículo:</strong></p>
+                                    <p id="tecnico-cubiculo" class="text-lg text-gray-800 font-medium">Cargando...</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                        
                     </div>
                     
             </div>
-
-            @if($evidencias->isNotEmpty())
-            <div class="bg-white dark:bg-gray-800 shadow-lg sm:rounded-lg p-6">
-                <h3 class="text-2xl font-semibold mb-4 text-[#00CFFF]">Evidencias</h3>
-                <div id="carousel" class="relative">
+            @if($evidenciasCompletas->isNotEmpty())
+            <!-- Carrusel para evidencias con ruta completa -->
+            <div class="bg-white dark:bg-gray-800 shadow-lg sm:rounded-lg p-6 mb-6">
+                <h3 class="text-2xl font-semibold mb-4 text-[#00CFFF]">Evidencias con Ruta Completa</h3>
+                <div id="carousel-completo" class="relative">
                     <div class="overflow-hidden">
-                        <div id="carousel-inner" class="flex transition-transform ease-in-out duration-500">
-                            @foreach ($evidencias as $index => $evidencia)
+                        <div id="carousel-inner-completo" class="flex transition-transform ease-in-out duration-500">
+                            @foreach ($evidenciasCompletas as $index => $evidencia)
                                 <div class="w-full flex-shrink-0 relative group {{ $index === 0 ? 'block' : 'hidden' }}">
-                                    @if(in_array($evidencia->extension, ['jpg', 'jpeg', 'png', 'gif', 'webp']))
+                                    @if(in_array(pathinfo($evidencia->ruta, PATHINFO_EXTENSION), ['jpg', 'jpeg', 'png', 'gif', 'webp']))
                                         <img src="{{ $evidencia->ruta }}" alt="{{ $evidencia->nombre_archivo }}" class="w-full h-auto object-contain rounded-lg border border-[#00CFFF] max-h-[400px] mx-auto">
                                     @else
                                         <a href="{{ $evidencia->ruta }}" target="_blank" class="text-[#00CFFF] hover:underline block text-center mt-4">
-                                            {{ $evidencia->nombre_archivo }} ({{ $evidencia->extension }})
+                                            {{ $evidencia->nombre_archivo }} ({{ pathinfo($evidencia->ruta, PATHINFO_EXTENSION) }})
                                         </a>
                                     @endif
-                                    <!-- Botón para eliminar con visibilidad condicional -->
-                                    <form action="{{ route('tecnico.evidencias.delete', $evidencia->id_evidencia) }}" method="POST" class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="bg-red-500 text-white px-2 py-1 rounded-lg hover:bg-red-700 focus:outline-none">
-                                            Eliminar
-                                        </button>
-                                    </form>
                                 </div>
                             @endforeach
                         </div>
                     </div>
                     <!-- Controles del carrusel -->
-                    <button id="prev" class="absolute top-1/2 left-0 transform -translate-y-1/2 px-4 py-2 bg-[#00CFFF] text-white rounded-full hover:bg-[#009FCC] focus:outline-none">‹</button>
-                    <button id="next" class="absolute top-1/2 right-0 transform -translate-y-1/2 px-4 py-2 bg-[#00CFFF] text-white rounded-full hover:bg-[#009FCC] focus:outline-none">›</button>
+                    <button id="prev-completo" class="absolute top-1/2 left-0 transform -translate-y-1/2 px-4 py-2 bg-[#00CFFF] text-white rounded-full hover:bg-[#009FCC] focus:outline-none">‹</button>
+                    <button id="next-completo" class="absolute top-1/2 right-0 transform -translate-y-1/2 px-4 py-2 bg-[#00CFFF] text-white rounded-full hover:bg-[#009FCC] focus:outline-none">›</button>
                 </div>
             </div>
-            
-            <script>
-                document.addEventListener('DOMContentLoaded', function () {
-                    const items = document.querySelectorAll('#carousel-inner > div');
-                    let currentIndex = 0;
-            
-                    function showItem(index) {
-                        items[currentIndex].classList.add('hidden');
-                        currentIndex = (index + items.length) % items.length;
-                        items[currentIndex].classList.remove('hidden');
-                    }
-            
-                    document.getElementById('prev').addEventListener('click', () => showItem(currentIndex - 1));
-                    document.getElementById('next').addEventListener('click', () => showItem(currentIndex + 1));
-                });
-            </script>
-            @else
-            <div class="bg-gray-300 dark:bg-gray-800 shadow sm:rounded-lg p-6">
-                <h3 class="text-2xl font-semibold mb-4 text-[#00CFFF]">Evidencias</h3>
-                <p class="text-gray-500">No hay evidencias subidas para este ticket.</p>
+        @endif
+        
+        @if($evidenciasRelativas->isNotEmpty())
+            <!-- Carrusel para evidencias con ruta relativa -->
+            <div class="bg-white dark:bg-gray-800 shadow-lg sm:rounded-lg p-6">
+                <h3 class="text-2xl font-semibold mb-4 text-[#00CFFF]">Evidencias con Ruta Relativa</h3>
+                <div id="carousel-relativo" class="relative">
+                    <div class="overflow-hidden">
+                        <div id="carousel-inner-relativo" class="flex transition-transform ease-in-out duration-500">
+                            @foreach ($evidenciasRelativas as $index => $evidencia)
+                                <div class="w-full flex-shrink-0 relative group {{ $index === 0 ? 'block' : 'hidden' }}">
+                                    @if(in_array(pathinfo($evidencia->ruta, PATHINFO_EXTENSION), ['jpg', 'jpeg', 'png', 'gif', 'webp']))
+                                        <img src="{{ $evidencia->ruta }}" alt="{{ $evidencia->nombre_archivo }}" class="w-full h-auto object-contain rounded-lg border border-[#00CFFF] max-h-[400px] mx-auto">
+                                    @else
+                                        <a href="{{ $evidencia->ruta }}" target="_blank" class="text-[#00CFFF] hover:underline block text-center mt-4">
+                                            {{ $evidencia->nombre_archivo }} ({{ pathinfo($evidencia->ruta, PATHINFO_EXTENSION) }})
+                                        </a>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    <!-- Controles del carrusel -->
+                    <button id="prev-relativo" class="absolute top-1/2 left-0 transform -translate-y-1/2 px-4 py-2 bg-[#00CFFF] text-white rounded-full hover:bg-[#009FCC] focus:outline-none">‹</button>
+                    <button id="next-relativo" class="absolute top-1/2 right-0 transform -translate-y-1/2 px-4 py-2 bg-[#00CFFF] text-white rounded-full hover:bg-[#009FCC] focus:outline-none">›</button>
+                </div>
             </div>
-            @endif
-            
+        @endif
+        
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                function initializeCarousel(carouselInnerId, prevButtonId, nextButtonId) {
+                    const items = document.querySelectorAll(`${carouselInnerId} > div`);
+                    let currentIndex = 0;
+        
+                    if (items.length === 0) return;
+        
+                    items.forEach((item, index) => {
+                        item.style.display = index === 0 ? 'block' : 'none';
+                    });
+        
+                    document.getElementById(prevButtonId).addEventListener('click', () => {
+                        items[currentIndex].style.display = 'none';
+                        currentIndex = (currentIndex === 0) ? items.length - 1 : currentIndex - 1;
+                        items[currentIndex].style.display = 'block';
+                    });
+        
+                    document.getElementById(nextButtonId).addEventListener('click', () => {
+                        items[currentIndex].style.display = 'none';
+                        currentIndex = (currentIndex === items.length - 1) ? 0 : currentIndex + 1;
+                        items[currentIndex].style.display = 'block';
+                    });
+                }
+        
+                // Inicializar ambos carruseles
+                initializeCarousel('#carousel-inner-completo', 'prev-completo', 'next-completo');
+                initializeCarousel('#carousel-inner-relativo', 'prev-relativo', 'next-relativo');
+            });
+        </script>
+        
+        
          
 
             <!-- Formulario para agregar observación -->
@@ -93,19 +151,33 @@
                 <h3 class="text-2xl font-semibold mb-4 text-[#00CFFF]">Agregar Observación</h3>
                 <form id="observacion-form">
                     @csrf
-                    <textarea name="observacion" id="observacion-input" placeholder="Añadir observación" class="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-[#00CFFF]" required></textarea>
+                    <textarea 
+                        name="observacion" 
+                        id="observacion-input" 
+                        placeholder="Añadir observación" 
+                        class="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-[#00CFFF]" 
+                        required></textarea>
                     <button type="submit" class="bg-[#00CFFF] text-white p-2 mt-4 rounded-lg hover:bg-[#009FCC] transition">Guardar Observación</button>
                 </form>
             </div>
-
+            
             <!-- Mostrar observaciones anteriores -->
-            <div id="observaciones-list" class="bg-gray-300 dark:bg-gray-800 shadow-lg sm:rounded-lg p-6">
+            <div id="observaciones-list" class="bg-gray-300 dark:bg-gray-800 shadow-lg sm:rounded-lg p-6 mt-6">
                 <h3 class="text-2xl font-semibold mb-4 text-[#00CFFF]">Observaciones</h3>
                 <div id="observaciones-content">
                     @foreach (explode("\n", $ticket->observaciones) as $observacion)
-                        <p class="text-gray-600 dark:text-gray-400 mb-2">{{ $observacion }}</p>
+                        @php
+                            // Separar observación y timestamp si existe
+                            $observacionPartes = explode(" - ", $observacion, 2);
+                        @endphp
+                        <div class="bg-gray-300 hover:bg-gray-400 p-2 rounded-lg mb-2">
+                            <p class="font-semibold">{{ $observacionPartes[0] ?? 'Sin usuario' }}</p>
+                            <p>{{ $observacionPartes[1] ?? $observacion }}</p>
+                        </div>
                     @endforeach
                 </div>
+            </div>
+            
             </div>
         </div>
     </div>
@@ -169,54 +241,89 @@
             }
         });
 
-        // Manejo de AJAX para agregar observación
         document.getElementById('observacion-form').addEventListener('submit', function (e) {
-            e.preventDefault();
+    e.preventDefault();
 
-            const observacionInput = document.getElementById('observacion-input');
-            const observacion = observacionInput.value;
-            const token = document.querySelector('input[name="_token"]').value;
+    const observacionInput = document.getElementById('observacion-input');
+    const observacion = observacionInput.value;
 
-            fetch(`{{ route('tecnico.agregarObservacion', $ticket->id_ticket) }}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': token,
-                },
-                body: JSON.stringify({ observacion: observacion }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const observacionesContent = document.getElementById('observaciones-content');
-                    const newObservacion = document.createElement('p');
-                    newObservacion.classList.add('text-gray-600', 'dark:text-gray-400', 'mb-2');
-                    newObservacion.textContent = `${data.observacion} (${data.timestamp})`;
-                    observacionesContent.appendChild(newObservacion);
+    fetch(`{{ route('tecnico.agregarObservacion', $ticket->id_ticket) }}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        },
+        body: JSON.stringify({ observacion }),
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Error al guardar la observación.');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            const observacionesContent = document.getElementById('observaciones-content');
+            const newObservacion = document.createElement('div');
+            newObservacion.classList.add(
+    'bg-white',           // Fondo blanco para modo claro
+    'dark:bg-gray-800',   // Fondo oscuro para modo oscuro
+    'shadow-lg',          // Sombra para darle profundidad
+    'p-4',                // Espaciado interno
+    'rounded-lg',         // Bordes redondeados
+    'mb-4',               // Espaciado inferior entre observaciones
+    'transition',         // Suaviza cambios de hover
+    'duration-300',       // Duración de la transición
+    'hover:shadow-xl',    // Aumenta la sombra al pasar el cursor
+    'hover:bg-gray-50',   // Cambia el fondo en hover para modo claro
+    'hover:dark:bg-gray-700' // Cambia el fondo en hover para modo oscuro
+);
+            
+            // Crear nombre de usuario y timestamp
+            const observacionUsuario = document.createElement('p');
+            observacionUsuario.classList.add('font-semibold');
+            observacionUsuario.textContent = `${data.usuario || 'Sin usuario'} - ${data.timestamp}`;
+            
+            // Crear contenido de la observación
+            const observacionTexto = document.createElement('p');
+            observacionTexto.textContent = data.observacion;
 
-                    // Limpia el campo de entrada de observaciones
-                    observacionInput.value = '';
+            // Agregar contenido a la nueva observación
+            newObservacion.appendChild(observacionUsuario);
+            newObservacion.appendChild(observacionTexto);
 
-                    // Muestra un mensaje de éxito
-                    Swal.fire({
-                        title: '¡Observación guardada!',
-                        text: 'La observación se ha añadido exitosamente.',
-                        icon: 'success',
-                        confirmButtonText: 'Aceptar',
-                        timer: 2000
-                    });
-                } else {
-                    Swal.fire({
-                        title: 'Error',
-                        text: data.error,
-                        icon: 'error',
-                        confirmButtonText: 'Aceptar',
-                        timer: 3000
-                    });
-                }
-            })
-            .catch(error => console.error('Error:', error));
+            // Agregar nueva observación al contenedor
+            observacionesContent.appendChild(newObservacion);
+
+            // Limpia el campo de entrada de observaciones
+            observacionInput.value = '';
+
+            // Mostrar mensaje de éxito
+            Swal.fire({
+                title: '¡Observación guardada!',
+                text: 'La observación se ha añadido exitosamente.',
+                icon: 'success',
+                confirmButtonText: 'Aceptar',
+                timer: 2000,
+            });
+        } else {
+            throw new Error(data.error || 'Error desconocido.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+
+        // Mostrar mensaje de error
+        Swal.fire({
+            title: 'Error',
+            text: 'Hubo un problema al guardar la observación.',
+            icon: 'error',
+            confirmButtonText: 'Aceptar',
+            timer: 3000,
         });
+    });
+});
+
 document.getElementById('cerrar-ticket-btn').addEventListener('click', function () {
     const ticketId = document.getElementById('cerrar-ticket-form').dataset.ticketId;
     const token = document.querySelector('input[name="_token"]').value;
@@ -268,41 +375,72 @@ document.getElementById('cerrar-ticket-btn').addEventListener('click', function 
             timer: 3000
         });
     });
-});
+ });
 
 document.addEventListener("DOMContentLoaded", function () {
-    // Supongamos que tienes una ruta para obtener la información del técnico de soporte asignado
-    fetch('/tecnico/obtener-informacion-soporte', { // Ajusta la ruta según sea necesario
+    const ticketId = "{{ $ticket->id_ticket }}"; // ID del ticket enviado desde el backend
+
+    fetch(`/tecnico/obtener-informacion-soporte/${ticketId}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        }
+        },
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Error al obtener la información del técnico de soporte.');
-        }
-        return response.json();
-    })
-    .then(data => {
-    // Asignar la información obtenida a los campos correspondientes
-    document.getElementById('tecnico-departamento').textContent = data.departamento !== undefined ? data.departamento : 'N/A';
-    document.getElementById('tecnico-area').textContent = data.area !== undefined ? data.area : 'N/A';
-    document.getElementById('tecnico-ubicacion').textContent = data.ubicacion !== undefined ? data.ubicacion : 'N/A';
-    document.getElementById('tecnico-cubiculo').textContent = data.cubiculo !== undefined ? data.cubiculo : 'N/A';
-})
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error('Error al obtener la información del soporte.');
+            }
+            return response.json();
+        })
+        .then((data) => {
+            if (data.error) {
+                throw new Error(data.error);
+            }
 
-    .catch(error => {
-        console.error('Error:', error);
-        document.getElementById('tecnico-departamento').textContent = 'Error al cargar';
-        document.getElementById('tecnico-area').textContent = 'Error al cargar';
-        document.getElementById('tecnico-ubicacion').textContent = 'Error al cargar';
-        document.getElementById('tecnico-cubiculo').textContent = 'Error al cargar';
-    });
+            // Verificar si hay datos del equipo
+            const equipo = data.ticket.equipo;
+            if (equipo && equipo.usuarios.length > 0) {
+                const usuarioAsignado = equipo.usuarios[0]; // Usamos el primer usuario asignado
+
+                // Extraer datos del nombre, email, departamento, cubículo, ubicación y área
+                const nombre = usuarioAsignado.nombre || 'Sin Nombre';
+                const email = usuarioAsignado.email || 'Sin Email';
+                const departamento = usuarioAsignado.departamento?.nombre_departamento || 'Sin Departamento';
+                const cubiculo = usuarioAsignado.cubiculo?.numero_cubiculo || 'Sin Cubículo';
+                const ubicacion = usuarioAsignado.cubiculo?.ubicacione?.nombre_ubicacion || 'Sin Ubicación';
+                const area = usuarioAsignado.cubiculo?.ubicacione?.area?.nombre_area || 'Sin Área';
+
+                // Actualizar los campos en la vista
+                document.getElementById('tecnico-nombre').textContent = nombre;
+                document.getElementById('tecnico-email').textContent = email;
+                document.getElementById('tecnico-departamento').textContent = departamento;
+                document.getElementById('tecnico-area').textContent = area;
+                document.getElementById('tecnico-ubicacion').textContent = ubicacion;
+                document.getElementById('tecnico-cubiculo').textContent = cubiculo;
+            } else {
+                // Mostrar mensajes predeterminados si no hay datos
+                document.getElementById('tecnico-nombre').textContent = 'Sin Nombre';
+                document.getElementById('tecnico-email').textContent = 'Sin Email';
+                document.getElementById('tecnico-departamento').textContent = 'Sin Departamento';
+                document.getElementById('tecnico-area').textContent = 'Sin Área';
+                document.getElementById('tecnico-ubicacion').textContent = 'Sin Ubicación';
+                document.getElementById('tecnico-cubiculo').textContent = 'Sin Cubículo';
+            }
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+
+            // Mostrar mensajes de error
+            document.getElementById('tecnico-nombre').textContent = 'Error al cargar';
+            document.getElementById('tecnico-email').textContent = 'Error al cargar';
+            document.getElementById('tecnico-departamento').textContent = 'Error al cargar';
+            document.getElementById('tecnico-area').textContent = 'Error al cargar';
+            document.getElementById('tecnico-ubicacion').textContent = 'Error al cargar';
+            document.getElementById('tecnico-cubiculo').textContent = 'Error al cargar';
+        });
 });
 
-        // Manejo de observaciones y cierre de ticket (código original)
+
 
 
 

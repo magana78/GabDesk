@@ -46,6 +46,25 @@ Route::middleware(['auth', 'role:Administrador'])
         Route::post('roles/{role}/permissions', [RolePermissionController::class, 'store'])->name('roles.permissions.store');
         Route::get('/tickets/data', [TicketController::class, 'getAdminTicketData'])->name('tickets.data');
         Route::put('/ticket/{id}/cerrar', [TicketController::class, 'cerrarTicket'])->name('cerrarTicket');
+        Route::get('/tickets/{ticket}/detalle', [TicketController::class, 'detalleAdmin'])->name('detalle');
+        Route::get('/obtener-informacion-soporte/{ticketId}', [TicketController::class, 'obtenerInformacionSoporteAdmin'])->name('obtenerInformacionSoporte');
+        Route::post('/tickets/{id}/observacion', [TicketController::class, 'agregarObservacionAdmin'])->name('agregarObservacion');
+
+// Vista principal del reporte
+Route::get('/admin/reportes/tickets-resueltos', [TicketController::class, 'ticketsResueltos'])->name('reportes.ticketsResueltos');
+
+// Obtención dinámica de datos con AJAX
+Route::post('/admin/reportes/tickets-resueltos/ajax', [TicketController::class, 'ticketsResueltosAjax'])->name('reportes.ticketsResueltosAjax');
+
+// Exportar reporte a PDF
+Route::post('/admin/reportes/tickets-resueltos/pdf', [TicketController::class, 'exportarPDF'])->name('reportes.exportarPDF');
+
+Route::get('/reportes/tickets-por-usuario', [TicketController::class, 'indexPorUsuario'])->name('reportes.ticketsPorUsuario');
+Route::post('/reportes/tickets-por-usuario/ajax', [TicketController::class, 'fetchTicketsPorUsuario'])->name('reportes.ticketsPorUsuarioAjax');
+Route::post('/reportes/tickets-por-usuario/pdf', [TicketController::class, 'exportTicketsPorUsuarioPDF'])->name('reportes.ticketsPorUsuarioPDF');
+
+
+
 // web.php o api.php
 Route::get('/usuarios/tecnicos', [TicketController::class, 'getTecnicosSoporte'])->name('usuarios.tecnicos');
 
@@ -67,9 +86,9 @@ Route::get('/usuarios/tecnicos', [TicketController::class, 'getTecnicosSoporte']
          Route::get('/admin/ajax/areas/{id_departamento}', [AjaxController::class, 'getAreasByDepartamento'])->name('ajax.getAreas');
          Route::get('/admin/ajax/ubicaciones/{id_area}', [AjaxController::class, 'getUbicacionesByArea'])->name('ajax.getUbicaciones');
          Route::get('/admin/ajax/cubiculos/{id_ubicacion}', [AjaxController::class, 'getCubiculosByUbicacion'])->name('ajax.getCubiculos');
-    });
 
-    
+
+    });
     
 
 // Rutas para el Técnico de Soporte
@@ -106,10 +125,11 @@ Route::middleware(['auth', 'role:Técnico de soporte'])
         Route::get('/tecnico/tickets/statistics', [TicketController::class, 'getTicketStatistics'])->name('tickets.statistics');
         Route::get('/carteras/filtrar', [TicketController::class, 'mostrarFormulario'])->name('carteras.filtrar');
 
-        Route::get('/filtrar-areas', [TicketController::class, 'filtrarAreas'])->name('filtrar.areas');
-        Route::get('/filtrar-ubicaciones', [TicketController::class, 'filtrarUbicaciones'])->name('filtrar.ubicaciones');
-        Route::get('/filtrar-cubiculos', [TicketController::class, 'filtrarCubiculos'])->name('filtrar.cubiculos');
-        Route::get('/obtener-informacion-soporte', [TicketController::class, 'obtenerInformacionSoporte'])->name('informacion.soporte');
+        // Route::get('/filtrar-areas', [TicketController::class, 'filtrarAreas'])->name('filtrar.areas');
+        // Route::get('/filtrar-ubicaciones', [TicketController::class, 'filtrarUbicaciones'])->name('filtrar.ubicaciones');
+        // Route::get('/filtrar-cubiculos', [TicketController::class, 'filtrarCubiculos'])->name('filtrar.cubiculos');
+        Route::get('/obtener-informacion-soporte/{ticketId}', [TicketController::class, 'obtenerInformacionSoporte'])->name('obtenerInformacionSoporte');
+       
         
         // 
         // Ruta para gestionar equipos (mostrar todos los equipos)
@@ -125,4 +145,6 @@ Route::middleware(['auth', 'role:Técnico de soporte'])
         Route::get('/equipos/{equipo}/assign-user', [UsuarioEquipoGestionController::class, 'assignForm'])->name('equipos.gestion.assignUser');
         Route::post('/equipos/{equipo}/assign-user', [UsuarioEquipoGestionController::class, 'assign'])->name('equipos.gestion.assign');
        
+       
+
     });

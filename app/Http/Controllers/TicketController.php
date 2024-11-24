@@ -19,43 +19,49 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 
 class TicketController extends Controller
 {
 
     use AsignarTicketTrait;
-        public function index(Request $request)
-        {
-            // Capturar el valor de búsqueda
-            $search = $request->input('search');
-        
-            // Crear la consulta base con filtrado de estado
-            $tickets = Ticket::query()
-                ->whereIn('estado_ticket', ['pendiente', 'en proceso']); // Excluir 'resuelto' y 'cerrado'
-        
-            // Aplicar el filtro si hay un valor de búsqueda
-            if ($search) {
-                $tickets->where(function ($query) use ($search) {
-                    $query->where('titulo', 'like', "%{$search}%")
-                        ->orWhere('estado_ticket', 'like', "%{$search}%")
-                        ->orWhere('prioridad', 'like', "%{$search}%")
-                        ->orWhereHas('asignado', function ($q) use ($search) {
-                            $q->where('nombre', 'like', "%{$search}%");
-                        });
-                });
-            }
-        
-            // Cargar las relaciones y aplicar la paginación (5 elementos por página)
-            $tickets = $tickets->with('reportante', 'asignado', 'equipo')->paginate(5);
-        
-            $departamentos = Departamento::all(); // Obtiene todos los departamentos
 
-            // Obtener todos los usuarios
-            $usuarios = Usuario::all();
-        
-            return view('tecnico.index', compact('tickets', 'usuarios','departamentos' ));
-        }
+     public function index(Request $request)
+{
+    // Capturar el valor de búsqueda
+    $search = $request->input('search');
+
+    // Crear la consulta base con filtrado de estado
+    $tickets = Ticket::query()
+        ->whereIn('estado_ticket', ['pendiente', 'en proceso']); // Excluir 'resuelto' y 'cerrado'
+
+    // Aplicar el filtro si hay un valor de búsqueda
+    if ($search) {
+        $tickets->where(function ($query) use ($search) {
+            $query->where('id_ticket', $search) // Permite buscar por ID exacto
+                ->orWhere('titulo', 'like', "%{$search}%")
+                ->orWhere('estado_ticket', 'like', "%{$search}%")
+                ->orWhere('prioridad', 'like', "%{$search}%")
+                ->orWhereHas('asignado', function ($q) use ($search) {
+                    $q->where('nombre', 'like', "%{$search}%");
+                });
+        });
+    }
+
+    // Cargar las relaciones y aplicar la paginación (5 elementos por página)
+    $tickets = $tickets->with('reportante', 'asignado', 'equipo')->paginate(5);
+
+    $departamentos = Departamento::all(); // Obtiene todos los departamentos
+
+    // Obtener todos los usuarios
+    $usuarios = Usuario::all();
+
+    return view('tecnico.index', compact('tickets', 'usuarios', 'departamentos'));
+}
+
     
 
     public function store(Request $request)
@@ -112,17 +118,24 @@ class TicketController extends Controller
     {
         $ticket = Ticket::findOrFail($id);
     
+        // Verifica si el ticket ya tiene un usuario asignado
+        if ($ticket->id_usuario_asignado !== null) {
+            return redirect()->route('tecnico.index')->with('error', 'Este ticket ya ha sido tomado por otro técnico.');
+        }
+    
+        // Verifica si el estado del ticket es 'pendiente'
         if ($ticket->estado_ticket === 'pendiente') {
             $ticket->id_usuario_asignado = Auth::id();
             $ticket->estado_ticket = 'en proceso';
             $ticket->observaciones = ($ticket->observaciones ?? '') . "\nTicket tomado por el usuario ID: " . Auth::id();
             $ticket->save();
-
+    
             return redirect()->route('tecnico.index')->with('success', 'Has tomado el ticket y ha sido asignado a ti.');
         }
     
-        return redirect()->route('tecnico.index')->with('error', 'Este ticket ya ha sido tomado por otro técnico o no está pendiente.');
+        return redirect()->route('tecnico.index')->with('error', 'Este ticket no está en estado pendiente.');
     }
+    
 
     public function asignarForm($id)
     {
@@ -164,22 +177,60 @@ class TicketController extends Controller
         return response()->json(['success' => true, 'message' => 'Estado cambiado con éxito.', 'nuevoEstado' => ucfirst($nuevoEstado)]);
     }
     
+
+
+
     public function show($id)
     {
-        // Obtener el ticket con sus evidencias sin definir la relación en el modelo
+        // Obtener el ticket por su ID
         $ticket = Ticket::findOrFail($id);
-        $evidencias = $ticket->hasMany(Evidenciaticket::class, 'id_ticket', 'id_ticket')->get();
     
-        return view('tecnico.show', compact('ticket', 'evidencias'));
+        // Obtener todas las evidencias asociadas al ticket
+        $evidencias = Evidenciaticket::where('id_ticket', $ticket->id_ticket)->get();
+    
+        // Separar las evidencias en rutas completas y relativas
+        $evidenciasCompletas = $evidencias->filter(function ($evidencia) {
+            return Str::startsWith($evidencia->ruta, ['http', 'https']);
+        });
+
+
+        $evidenciasRelativas = $evidencias->filter(function ($evidencia) {
+            return !Str::startsWith($evidencia->ruta, ['http', 'https']);
+        })->map(function ($evidencia) {
+            // Construir la ruta completa para las evidencias relativas
+            $evidencia->ruta = url(ltrim($evidencia->ruta, '/'));
+            return $evidencia;
+        });
+
+        // Retornar la vista con ambas colecciones
+        return view('tecnico.show', compact('ticket', 'evidenciasCompletas', 'evidenciasRelativas'));
     }
+    
     
     public function vista($id)
     {
         // Obtener el ticket con sus evidencias sin definir la relación en el modelo
-        $ticket = Ticket::findOrFail($id);
-        $evidencias = $ticket->hasMany(Evidenciaticket::class, 'id_ticket', 'id_ticket')->get();
+         // Obtener el ticket por su ID
+         $ticket = Ticket::findOrFail($id);
     
-        return view('admin.vista', compact('ticket', 'evidencias'));
+         // Obtener todas las evidencias asociadas al ticket
+         $evidencias = Evidenciaticket::where('id_ticket', $ticket->id_ticket)->get();
+     
+         // Separar las evidencias en rutas completas y relativas
+         $evidenciasCompletas = $evidencias->filter(function ($evidencia) {
+             return Str::startsWith($evidencia->ruta, ['http', 'https']);
+         });
+     
+         $evidenciasRelativas = $evidencias->filter(function ($evidencia) {
+             return !Str::startsWith($evidencia->ruta, ['http', 'https']);
+         })->map(function ($evidencia) {
+             // Construir la ruta completa para las evidencias relativas
+             $evidencia->ruta = url(ltrim($evidencia->ruta, '/'));
+             return $evidencia;
+         });
+ 
+    
+        return view('admin.vista', compact('ticket', 'evidencias','evidenciasCompletas', 'evidenciasRelativas'));
     }
  
 
@@ -195,7 +246,7 @@ class TicketController extends Controller
     
         // Verificar si el ticket ya tiene 3 evidencias
         $evidenciasCount = Evidenciaticket::where('id_ticket', $ticketId)->count();
-        if ($evidenciasCount >= 3) {
+        if ($evidenciasCount >= 5) {
             return redirect()->route('tecnico.show', $ticketId)->with('error', 'No puedes subir más de 3 evidencias para este ticket.');
         }
     
@@ -249,7 +300,8 @@ class TicketController extends Controller
         // Aplicar el filtro si hay un valor de búsqueda
         if ($search) {
             $tickets->where(function ($query) use ($search) {
-                $query->where('titulo', 'like', "%{$search}%")
+                $query->where('id_ticket', $search) // Búsqueda exacta por ID del ticket
+                      ->orWhere('titulo', 'like', "%{$search}%")
                       ->orWhere('estado_ticket', 'like', "%{$search}%")
                       ->orWhere('prioridad', 'like', "%{$search}%")
                       ->orWhereHas('asignado', function ($q) use ($search) {
@@ -264,6 +316,7 @@ class TicketController extends Controller
         // Retornar la vista con los tickets filtrados
         return view('admin.tickets.index', compact('tickets'));
     }
+    
     
 
 public function asignarFormAdmin($id)
@@ -346,28 +399,120 @@ public function cambiarEstadoAdmin(Request $request, $id)
 
 public function agregarObservacion(Request $request, $id)
 {
+    // Validar que la observación no esté vacía
+    $request->validate([
+        'observacion' => 'required|string|max:500', // Puedes ajustar el tamaño máximo
+    ]);
+
     // Obtén el usuario autenticado como instancia del modelo Usuario
-    $usuario = Usuario::find(Auth::id());
+    $usuario = Auth::user();
+
+    // Verificar que el ticket existe
+    $ticket = Ticket::findOrFail($id);
 
     // Verificar que el usuario es el técnico asignado o tiene el rol de administrador
-    $ticket = Ticket::findOrFail($id);
-    if ($ticket->id_usuario_asignado !== $usuario->id_usuario && !$usuario->hasRole('Técnico de soporte')) {
+    if ($ticket->id_usuario_asignado !== $usuario->id_usuario && !$usuario->hasRole('Tecnico de Soporte')) {
         return response()->json(['error' => 'No tienes permiso para añadir observaciones a este ticket.'], 403);
     }
 
+    // Preparar la nueva observación con el nombre del usuario y la fecha/hora
+    $nuevaObservacion = "[" . $usuario->nombre . " - " . now()->format('d/m/Y H:i') . "] " . $request->input('observacion');
+
     // Concatenar la nueva observación al campo existente de observaciones
-    $nuevaObservacion = $request->input('observacion');
     $ticket->observaciones = trim($ticket->observaciones . "\n" . $nuevaObservacion);
     $ticket->save();
 
-    return response()->json(['success' => true, 'observacion' => $nuevaObservacion, 'timestamp' => now()->format('d/m/Y H:i')]);
+    return response()->json([
+        'success' => true,
+        'observacion' => $nuevaObservacion,
+        'usuario' => $usuario->nombre,
+        'timestamp' => now()->format('d/m/Y H:i'),
+    ]);
 }
+
+public function agregarObservacionAdmin(Request $request, $id)
+{
+    // Validar que la observación no esté vacía
+    $request->validate([
+        'observacion' => 'required|string|max:500', // Puedes ajustar el tamaño máximo
+    ]);
+
+    // Obtén el usuario autenticado como instancia del modelo Usuario
+    $usuario = Auth::user();
+
+    // Verificar que el ticket existe
+    $ticket = Ticket::findOrFail($id);
+
+    // Verificar que el usuario es el técnico asignado o tiene el rol de administrador
+    if ($ticket->id_usuario_asignado !== $usuario->id_usuario && !$usuario->hasRole('Administrador')) {
+        return response()->json(['error' => 'No tienes permiso para añadir observaciones a este ticket.'], 403);
+    }
+
+    // Preparar la nueva observación con el nombre del usuario y la fecha/hora
+    $nuevaObservacion = "[" . $usuario->nombre . " - " . now()->format('d/m/Y H:i') . "] " . $request->input('observacion');
+
+    // Concatenar la nueva observación al campo existente de observaciones
+    $ticket->observaciones = trim($ticket->observaciones . "\n" . $nuevaObservacion);
+    $ticket->save();
+
+    return response()->json([
+        'success' => true,
+        'observacion' => $nuevaObservacion,
+        'usuario' => $usuario->nombre,
+        'timestamp' => now()->format('d/m/Y H:i'),
+    ]);
+}
+
+
 public function detalle($id)
 {
+    // Obtener el ticket por su ID
     $ticket = Ticket::findOrFail($id);
-    $evidencias = $ticket->evidenciatickets()->get(); // Obtiene las evidencias si existe la relación
 
-    return view('tecnico.show', compact('ticket', 'evidencias'));
+    // Obtener todas las evidencias asociadas al ticket
+    $evidencias = $ticket->evidenciatickets()->get();
+
+    // Separar las evidencias en rutas completas y relativas
+    $evidenciasCompletas = $evidencias->filter(function ($evidencia) {
+        return Str::startsWith($evidencia->ruta, ['http', 'https']);
+    });
+
+    $evidenciasRelativas = $evidencias->filter(function ($evidencia) {
+        return !Str::startsWith($evidencia->ruta, ['http', 'https']);
+    })->map(function ($evidencia) {
+        // Construir la ruta completa para las evidencias relativas
+        $evidencia->ruta = url(ltrim($evidencia->ruta, '/'));
+        return $evidencia;
+    });
+
+    // Retornar la vista con las colecciones separadas y el ticket
+    return view('tecnico.show', compact('ticket', 'evidenciasCompletas', 'evidenciasRelativas'));
+}
+
+
+public function detalleAdmin($id)
+{
+    // Obtener el ticket por su ID
+    $ticket = Ticket::findOrFail($id);
+
+    // Obtener todas las evidencias asociadas al ticket
+    $evidencias = $ticket->evidenciatickets()->get();
+
+    // Separar las evidencias en rutas completas y relativas
+    $evidenciasCompletas = $evidencias->filter(function ($evidencia) {
+        return Str::startsWith($evidencia->ruta, ['http', 'https']);
+    });
+
+    $evidenciasRelativas = $evidencias->filter(function ($evidencia) {
+        return !Str::startsWith($evidencia->ruta, ['http', 'https']);
+    })->map(function ($evidencia) {
+        // Construir la ruta completa para las evidencias relativas
+        $evidencia->ruta = url(ltrim($evidencia->ruta, '/'));
+        return $evidencia;
+    });
+
+    // Retornar la vista con las colecciones separadas y el ticket
+    return view('admin.vista', compact('ticket', 'evidenciasCompletas', 'evidenciasRelativas'));
 }
 
 public function cerrarTicket($id)
@@ -527,61 +672,235 @@ public function mostrarFormulario(Request $request)
     return view('tecnico.filtrarcarteras', compact('departamentos', 'areas'));
 }
 
-public function filtrarAreas(Request $request)
-{
-    $departamentoId = $request->input('departamento_id');
-    // Tu lógica de consulta
-    $areas = Area::where('id_departamento', $departamentoId)->get(['id_area', 'nombre_area']);
+// public function filtrarAreas(Request $request)
+// {
+//     $departamentoId = $request->input('departamento_id');
+//     // Tu lógica de consulta
+//     $areas = Area::where('id_departamento', $departamentoId)->get(['id_area', 'nombre_area']);
     
-    return response()->json(['areas' => $areas]);
-}
+//     return response()->json(['areas' => $areas]);
+// }
 
 
-public function filtrarUbicaciones(Request $request)
+// public function filtrarUbicaciones(Request $request)
+// {
+//     $areaId = $request->input('area_id');
+//     $ubicaciones = Ubicacione::where('id_area', $areaId)->get();
+//     return response()->json(['ubicaciones' => $ubicaciones]);
+// }
+
+// public function filtrarCubiculos(Request $request)
+// {
+//     $ubicacionId = $request->input('ubicacion_id');
+//     $cubiculos = Cubiculo::where('id_ubicacion', $ubicacionId)->get();
+//     return response()->json(['cubiculos' => $cubiculos]);
+// }
+
+public function obtenerInformacionSoporte($ticketId)
 {
-    $areaId = $request->input('area_id');
-    $ubicaciones = Ubicacione::where('id_area', $areaId)->get();
-    return response()->json(['ubicaciones' => $ubicaciones]);
-}
+    try {
+        // Obtener el ticket con todas sus relaciones necesarias
+        $ticket = Ticket::with([
+            'usuarioReportante' => function ($query) {
+                $query->with(['departamento', 'cubiculo.ubicacione.area']);
+            },
+            'usuarioAsignado' => function ($query) {
+                $query->with(['departamento', 'cubiculo.ubicacione.area']);
+            },
+            'equipo' => function ($query) {
+                $query->with([
+                    'usuarios' => function ($query) {
+                        $query->with(['departamento', 'cubiculo.ubicacione.area']);
+                    },
+                    'dispositivos' => function ($query) {
+                        $query->with('accesorios');
+                    },
+                    'imagenes'
+                ]);
+            },
+            'estadostickets',  // Estado histórico del ticket
+            'evidenciatickets' // Evidencias asociadas al ticket
+        ])->find($ticketId);
 
-public function filtrarCubiculos(Request $request)
-{
-    $ubicacionId = $request->input('ubicacion_id');
-    $cubiculos = Cubiculo::where('id_ubicacion', $ubicacionId)->get();
-    return response()->json(['cubiculos' => $cubiculos]);
-}
-
-public function obtenerInformacionSoporte(Request $request)
-{
-    $tecnico = Auth::user(); // Obtenemos el usuario autenticado
-
-    if ($tecnico) {
-        // Consultar el cubículo relacionado
-        $cubiculo = Cubiculo::where('id_cubiculo', $tecnico->id_cubiculo)->first();
-        $ubicacion = null;
-        $area = null;
-
-        if ($cubiculo) {
-            // Obtener la ubicación y el área relacionadas con el cubículo
-            $ubicacion = Ubicacione::where('id_ubicacion', $cubiculo->id_ubicacion)->first();
-            if ($ubicacion) {
-                $area = Area::where('id_area', $ubicacion->id_area)->first();
-            }
+        // Verificar si se encontró el ticket
+        if (!$ticket) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ticket no encontrado.'
+            ], 404);
         }
 
-        // Retorno de la información
+        // Retornar los detalles del ticket en el formato esperado
         return response()->json([
-            'departamento' => $tecnico->id_departamento ?? 'N/A',
-            'area' => $area ? $area->nombre_area : 'N/A',
-            'ubicacion' => $ubicacion ? $ubicacion->nombre_ubicacion : 'N/A',
-            'cubiculo' => $cubiculo ? $cubiculo->id_cubiculo : 'N/A',
-        ]);
-    }
+            'success' => true,
+            'ticket' => $ticket
+        ], 200);
 
-    return response()->json(['error' => 'Usuario no autenticado o datos incompletos'], 401);
+    } catch (\Exception $e) {
+        // Manejo de errores en caso de excepción
+        return response()->json([
+            'success' => false,
+            'message' => 'Ocurrió un error al obtener los detalles del ticket.',
+            'error' => $e->getMessage()
+        ], 500);
+    }
 }
 
 
+public function obtenerInformacionSoporteAdmin($ticketId)
+{
+    try {
+        // Obtener el ticket con todas sus relaciones necesarias
+        $ticket = Ticket::with([
+            'usuarioReportante' => function ($query) {
+                $query->with(['departamento', 'cubiculo.ubicacione.area']);
+            },
+            'usuarioAsignado' => function ($query) {
+                $query->with(['departamento', 'cubiculo.ubicacione.area']);
+            },
+            'equipo' => function ($query) {
+                $query->with([
+                    'usuarios' => function ($query) {
+                        $query->with(['departamento', 'cubiculo.ubicacione.area']);
+                    },
+                    'dispositivos' => function ($query) {
+                        $query->with('accesorios');
+                    },
+                    'imagenes'
+                ]);
+            },
+            'estadostickets',  // Estado histórico del ticket
+            'evidenciatickets' // Evidencias asociadas al ticket
+        ])->find($ticketId);
+
+        // Verificar si se encontró el ticket
+        if (!$ticket) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ticket no encontrado.'
+            ], 404);
+        }
+
+        // Retornar los detalles del ticket en el formato esperado
+        return response()->json([
+            'success' => true,
+            'ticket' => $ticket
+        ], 200);
+
+    } catch (\Exception $e) {
+        // Manejo de errores en caso de excepción
+        return response()->json([
+            'success' => false,
+            'message' => 'Ocurrió un error al obtener los detalles del ticket.',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
+
+
+
+public function ticketsResueltos()
+{
+    return view('admin.index');
+}
+
+public function ticketsResueltosAjax(Request $request)
+{
+    $mes = $request->input('mes');
+    $semana = $request->input('semana');
+
+    // Calcular fechas de inicio y fin de la semana seleccionada
+    $startOfWeek = Carbon::create(null, $mes)->startOfMonth()->addWeeks($semana - 1)->startOfWeek();
+    $endOfWeek = $startOfWeek->copy()->endOfWeek();
+
+    $tickets = Ticket::where('estado_ticket', 'resuelto')
+        ->whereBetween('fecha_resolucion', [$startOfWeek, $endOfWeek])
+        ->orderBy('fecha_resolucion', 'desc')
+        ->get();
+
+    return response()->json(['tickets' => $tickets]);
+}
+
+
+
+public function exportarPDF(Request $request)
+{
+    $mes = $request->input('mes');
+    $semana = $request->input('semana');
+
+    $startOfWeek = Carbon::create(null, $mes)->startOfMonth()->addWeeks($semana - 1)->startOfWeek();
+    $endOfWeek = $startOfWeek->copy()->endOfWeek();
+
+    $tickets = Ticket::where('estado_ticket', 'resuelto')
+        ->whereBetween('fecha_resolucion', [$startOfWeek, $endOfWeek])
+        ->orderBy('fecha_resolucion', 'desc')
+        ->get();
+
+    $pdf = Pdf::loadView('admin.ticketsPDF', compact('tickets', 'startOfWeek', 'endOfWeek'));
+    return $pdf->download('Reporte_Tickets_Resueltos.pdf');
+}
+
+
+public function indexPorUsuario()
+{
+    return view('admin.ticketsPorUsuario');
+}
+
+/**
+ * Obtiene datos de los tickets resueltos por usuario en el rango de fechas.
+ */
+public function fetchTicketsPorUsuario(Request $request)
+{
+    // Validar mes y semana
+    $mes = $request->input('mes');
+    $semana = $request->input('semana');
+
+    if (!$mes || !$semana) {
+        return response()->json(['error' => 'Las fechas son obligatorias.'], 400);
+    }
+
+    // Calcular las fechas de inicio y fin de la semana seleccionada
+    $startOfWeek = Carbon::create(null, $mes)->startOfMonth()->addWeeks($semana - 1)->startOfWeek();
+    $endOfWeek = $startOfWeek->copy()->endOfWeek();
+
+    // Obtener los tickets resueltos junto con el técnico asignado
+    $tickets = Ticket::with('usuarioAsignado') // Relación del técnico
+        ->where('estado_ticket', 'resuelto')
+        ->whereBetween('fecha_resolucion', [$startOfWeek, $endOfWeek])
+        ->orderBy('fecha_resolucion', 'desc')
+        ->get();
+
+    return response()->json(['tickets' => $tickets]);
+}
+
+
+
+/**
+ * Exporta los tickets resueltos a un PDF.
+ */
+public function exportTicketsPorUsuarioPDF(Request $request)
+{
+    $mes = $request->input('mes');
+    $semana = $request->input('semana');
+
+    if (!$mes || !$semana) {
+        return back()->withErrors(['error' => 'Las fechas son obligatorias.']);
+    }
+
+    $startOfWeek = Carbon::create(null, $mes)->startOfMonth()->addWeeks($semana - 1)->startOfWeek();
+    $endOfWeek = $startOfWeek->copy()->endOfWeek();
+
+    $tickets = Ticket::with('usuarioAsignado')
+        ->where('estado_ticket', 'resuelto')
+        ->whereBetween('fecha_resolucion', [$startOfWeek, $endOfWeek])
+        ->orderBy('fecha_resolucion', 'desc')
+        ->get();
+
+    $pdf = Pdf::loadView('admin.ticketsPorUsuarioPDF', compact('tickets', 'startOfWeek', 'endOfWeek'));
+    return $pdf->download('Reporte_Tickets_Por_Usuario.pdf');
+}
+
+}
 
 
 
@@ -592,4 +911,3 @@ public function obtenerInformacionSoporte(Request $request)
 
     
 
-}

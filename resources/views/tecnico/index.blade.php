@@ -52,7 +52,7 @@
                                     <td class="px-6 py-4 text-center">{{ $ticket->fecha_creacion->format('d/m/Y') }}</td>
                                     <td class="px-6 py-4 text-center">
                                         @php
-                                            $estadoClasses = [
+                                            $estadoClasses = [  
                                                 'pendiente' => 'bg-yellow-500 text-white',
                                                 'en proceso' => 'bg-[#00CFFF] text-white',
                                                 'resuelto' => 'bg-green-500 text-white',
@@ -95,6 +95,8 @@
                                         <button onclick="openModal({{ $ticket->id_ticket }})" class="w-3/4 bg-[#00CFFF] hover:bg-[#00B3CC] text-white font-semibold py-1 px-4 rounded-md transition duration-150 shadow focus:outline-none mt-2">
                                             Subir Evidencia
                                         </button>
+
+                                       
                                     </td>
                                 </tr>
                             @endforeach
@@ -131,26 +133,33 @@
     <!-- SweetAlert2 para alertas -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            @if(session('success'))
-                Swal.fire({
-                    title: '¡Éxito!',
-                    text: "{{ session('success') }}",
-                    icon: 'success',
-                    confirmButtonText: 'Aceptar',
-                    timer: 3000
-                });
-            @endif
-            @if(session('error'))
-                Swal.fire({
-                    title: 'Error',
-                    text: "{{ session('error') }}",
-                    icon: 'error',
-                    confirmButtonText: 'Aceptar',
-                    timer: 3000
-                });
-            @endif
+       document.addEventListener("DOMContentLoaded", function () {
+    @if(session('success'))
+        Swal.fire({
+            title: '¡Éxito!',
+            text: "{{ session('success') }}",
+            icon: 'success',
+            confirmButtonText: 'Aceptar',
+            timer: 3000,
+            customClass: {
+                confirmButton: 'bg-[#00CFFF]'
+            }
         });
+    @endif
+    @if(session('error'))
+        Swal.fire({
+            title: 'Error',
+            text: "{{ session('error') }}",
+            icon: 'error',
+            confirmButtonText: 'Aceptar',
+            timer: 3000,
+            customClass: {
+                confirmButton: 'bg-[#00CFFF]'
+            }
+        });
+    @endif
+});
+
 
         function openModal(ticketId) {
             const form = document.getElementById('form-evidencia');

@@ -7,86 +7,84 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 bg-white dark:bg-gray-800">
-                    <a href="{{ route('tecnico.equipos.gestion.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg mb-4 inline-block">
-                        Crear Nuevo Equipo
+            <div class="bg-white dark:bg-gray-800 shadow sm:rounded-lg p-6">
+                <!-- Botón para Crear Nuevo Equipo -->
+                <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 md:mb-0">
+                        Lista de Equipos
+                    </h3>
+                    <a href="{{ route('tecnico.equipos.gestion.create') }}" 
+                       class="bg-[#00CFFF] hover:bg-[#009FCC] text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-200 ease-in-out transform hover:scale-105">
+                        + Crear Nuevo Equipo
                     </a>
+                </div>
 
-                    <div class="mt-6">
-                        @if($equipos->isEmpty())
-                            <p class="text-gray-600 dark:text-gray-300">No hay equipos agregados aún. Los equipos nuevos aparecerán aquí.</p>
-                        @else
-                            <table class="min-w-full bg-gray-100 dark:bg-gray-900 rounded-lg">
-                                <thead>
+                <!-- Tabla de Equipos -->
+                @if($equipos->isEmpty())
+                    <div class="text-center text-gray-600 dark:text-gray-400 py-10">
+                        <p>No hay equipos agregados aún. Los equipos nuevos aparecerán aquí.</p>
+                    </div>
+                @else
+                    <div class="overflow-x-auto">
+                        <table class="table-auto min-w-full bg-[#00CFFF] text-white rounded-lg shadow-md">
+                            <thead>
                                 <tr>
-                                    <th class="px-4 py-2 text-left text-gray-800 dark:text-gray-200 font-semibold">Imagen</th>
-                                    <th class="px-4 py-2 text-left text-gray-800 dark:text-gray-200 font-semibold">Nombre del Equipo</th>
-                                    <th class="px-4 py-2 text-left text-gray-800 dark:text-gray-200 font-semibold">Descripción</th>
-                                    <th class="px-4 py-2 text-left text-gray-800 dark:text-gray-200 font-semibold">Número de Serie</th>
-                                    <th class="px-4 py-2 text-left text-gray-800 dark:text-gray-200 font-semibold">Dispositivos</th>
-                                    <th class="px-4 py-2 text-left text-gray-800 dark:text-gray-200 font-semibold">Usuario Asignado</th>
-                                    <th class="px-4 py-2 text-left text-gray-800 dark:text-gray-200 font-semibold">Acciones</th>
+                                    <th class="px-4 py-3 text-left font-semibold">Nombre del Equipo</th>
+                                    <th class="px-4 py-3 text-left font-semibold">Descripción</th>
+                                    <th class="px-4 py-3 text-left font-semibold">Número de Serie</th>
+                                    <th class="px-4 py-3 text-left font-semibold">Usuario Asignado</th>
+                                    <th class="px-4 py-3 text-center font-semibold">Acciones</th>
                                 </tr>
-                                </thead>
-                                <tbody>
+                            </thead>
+                            <tbody class="bg-white text-gray-800 dark:bg-gray-700">
                                 @foreach($equipos as $equipo)
-                                    <tr class="border-b border-gray-300 dark:border-gray-700">
-                                        <!-- Columna de Imagen -->
-                                        <td class="px-4 py-2">
-                                            @if($equipo->imagenesequipos->isNotEmpty())
-                                                <img src="{{ asset('storage/' . $equipo->imagenesequipos->first()->ruta) }}" alt="Imagen del equipo" class="w-16 h-16 object-cover rounded-lg">
-                                            @else
-                                                <span class="text-gray-600 dark:text-gray-400">Sin Imagen</span>
-                                            @endif
-                                        </td>
+                                    <tr class="border-b border-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 transition duration-200">
                                         <!-- Nombre del Equipo -->
-                                        <td class="px-4 py-2 text-gray-800 dark:text-gray-200">{{ $equipo->nombre_equipo }}</td>
+                                        <td class="px-4 py-3 font-medium">
+                                            {{ $equipo->nombre_equipo }}
+                                        </td>
                                         <!-- Descripción -->
-                                        <td class="px-4 py-2 text-gray-600 dark:text-gray-300">{{ $equipo->descripcion }}</td>
+                                        <td class="px-4 py-3">
+                                            {{ $equipo->descripcion }}
+                                        </td>
                                         <!-- Número de Serie -->
-                                        <td class="px-4 py-2 text-gray-600 dark:text-gray-300">{{ $equipo->numero_serie }}</td>
-                                        <!-- Dispositivos -->
-                                        <td class="px-4 py-2 text-gray-600 dark:text-gray-300">
-                                            @if($equipo->dispositivos->isNotEmpty())
-                                                <ul>
-                                                    @foreach($equipo->dispositivos as $dispositivo)
-                                                        <li>{{ $dispositivo->tipo_dispositivo }}</li>
-                                                    @endforeach
-                                                </ul>
-                                            @else
-                                                Sin Dispositivos
-                                            @endif
+                                        <td class="px-4 py-3">
+                                            {{ $equipo->numero_serie }}
                                         </td>
                                         <!-- Usuario Asignado -->
-                                        <td class="px-4 py-2 text-gray-600 dark:text-gray-300">
+                                        <td class="px-4 py-3">
                                             {{ $equipo->usuario ? $equipo->usuario->nombre : 'No asignado' }}
                                         </td>
                                         <!-- Acciones -->
-                                        <td class="px-4 py-2 flex space-x-2">
+                                        <td class="px-4 py-3 flex flex-col md:flex-row justify-center items-center md:space-x-2 space-y-2 md:space-y-0">
                                             <!-- Botón de Ver Detalles -->
-                                            <a href="{{ route('tecnico.equipos_gestion_show', $equipo->id_equipo) }}" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow">
-                                                Ver Detalles
+                                            <a href="{{ route('tecnico.equipos_gestion_show', $equipo->id_equipo) }}" 
+                                               class="bg-[#00CFFF] hover:bg-[#009FCC] text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-200 ease-in-out transform hover:scale-105">
+                                                Ver
                                             </a>
-                                            <a href="{{ route('tecnico.equipos.gestion.addImage', $equipo) }}" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow">
-                                                {{ $equipo->imagenesequipos->isEmpty() ? 'Agregar Foto' : 'Actualizar Foto' }}
+                                            <!-- Botón de Agregar Imagen -->
+                                            <a href="{{ $equipo->imagenesequipos->count() < 3 ? route('tecnico.equipos.gestion.addImage', $equipo) : '#' }}" 
+                                               class="{{ $equipo->imagenesequipos->count() < 3 ? 'bg-gray-300 hover:bg-gray-400' : 'bg-gray-400 cursor-not-allowed' }} 
+                                                      text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-200 ease-in-out transform hover:scale-105">
+                                                {{ $equipo->imagenesequipos->count() < 3 ? 'Agregar Imagen' : 'Máximo alcanzado' }}
                                             </a>
-                                            <a href="{{ route('tecnico.equipos.gestion.assignUser', $equipo) }}" class="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg shadow">
+                                            <!-- Botón de Asignar Usuario -->
+                                            <a href="{{ route('tecnico.equipos.gestion.assignUser', $equipo) }}" 
+                                               class="border-2 border-[#00CFFF] text-[#00CFFF] hover:text-[#009FCC] hover:bg-[#E6F9FF] px-4 py-2 rounded transition duration-150">
                                                 {{ $equipo->usuario ? 'Cambiar Usuario' : 'Asignar Usuario' }}
                                             </a>
                                         </td>
                                     </tr>
                                 @endforeach
-                                </tbody>
-                            </table>
-
-                            <!-- Enlaces de paginación -->
-                            <div class="mt-6">
-                                {{ $equipos->links() }}
-                            </div>
-                        @endif
+                            </tbody>
+                        </table>
                     </div>
-                </div>
+
+                    <!-- Paginación -->
+                    <div class="mt-6">
+                        {{ $equipos->links('pagination::tailwind') }}
+                    </div>
+                @endif
             </div>
         </div>
     </div>

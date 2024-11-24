@@ -43,17 +43,17 @@
             <div class="bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-hidden mb-6 p-6">
                 <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">Gestión de Tickets</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <a href="{{ route('tecnico.index') }}" class="flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 rounded-lg shadow-lg">
+                    <a href="{{ route('tecnico.index') }}" class="flex items-center justify-center bg-[#00CFFF] hover:bg-[#009FCC] text-white font-bold py-4 rounded-lg shadow-lg">
                         Ver Todos los Tickets
                     </a>
-                    <a href="{{ route('tecnico.carteras.filtrar') }}" class="flex items-center justify-center bg-green-500 hover:bg-green-600 text-white font-bold py-4 rounded-lg shadow-lg">
+                    <a href="{{ route('tecnico.carteras.filtrar') }}" class="flex items-center justify-center bg-gray-300 hover:bg-gray-400 text-white font-bold py-4 rounded-lg shadow-lg">
                         Carteras
                     </a>
-                    <a href="{{ route('tecnico.filterByState', 'resuelto') }}" class="flex items-center justify-center bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-4 rounded-lg shadow-lg">
+                    <a href="{{ route('tecnico.filterByState', 'resuelto') }}" class="border-2 border-[#00CFFF]  text-[#00CFFF]  hover:text-[#009FCC]  px-4 py-2 rounded transition duration-150 cambiar-estado-btn">
                         Ver Tickets Resueltos
                     </a>
                     <!-- Nuevo enlace para equipos -->
-                    <a href="{{ route('tecnico.equipos.gestion.index') }}" class="flex items-center justify-center bg-purple-500 hover:bg-purple-600 text-white font-bold py-4 rounded-lg shadow-lg">
+                    <a href="{{ route('tecnico.equipos.gestion.index') }}" class="flex items-center justify-center bg-[#ece289] hover:bg-[#FFEE58]bg-purple-500  text-white font-bold py-4 rounded-lg shadow-lg">
                         Gestionar Equipos
                     </a>
                 </div>

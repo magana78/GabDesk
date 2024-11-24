@@ -20,17 +20,12 @@
                     <p class="text-gray-600 dark:text-gray-400">Desde aquí puedes gestionar técnicos, tickets y visualizar estadísticas del sistema.</p>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <button class="bg-[#00CFFF] hover:bg-[#009FCC] text-white px-4 py-2 rounded-lg transition duration-150">
-                        Crear nuevo
-                    </button>
-                    <button class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg transition duration-150">
-                        Configuración
-                    </button>
+                
                 </div>
             </div>
 
             <!-- Tarjetas de estadísticas -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 flex items-center justify-between">
                     <div>
                         <h4 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Técnicos</h4>
@@ -50,15 +45,7 @@
                         {{ $totalTickets }}
                     </div>
                 </div>
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 flex items-center justify-between">
-                    <div>
-                        <h4 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Reportes</h4>
-                        <p class="text-gray-600 dark:text-gray-400">Visualiza estadísticas</p>
-                    </div>
-                    <div class="text-[#00CFFF] text-4xl font-bold">
-                        8
-                    </div>
-                </div>
+            
             </div>
 
             <!-- Tabla de gestión -->
@@ -74,15 +61,27 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {{-- <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-[#E0F7FF] dark:hover:bg-gray-700 transition duration-200">
-                                <td class="p-4">Gestión de Técnicos</td>
-                                <td class="p-4">Administra a los técnicos del sistema</td>
+                            <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-[#E0F7FF] dark:hover:bg-gray-700 transition duration-200">
+                                <td class="p-4">Gestión de Reportes</td>
+                                <td class="p-4">Administra los Reportes del sistema</td>
                                 <td class="p-4">
-                                    <a href="#" class="bg-[#00CFFF] hover:bg-[#009FCC] text-white font-bold py-1 px-3 rounded-lg transition duration-150">
+                                    <a href="{{ route('admin.reportes.ticketsResueltos') }}" 
+                                       class="bg-[#00CFFF] hover:bg-[#009FCC] text-white font-bold py-1 px-3 rounded-lg transition duration-150">
                                         Ver
                                     </a>
                                 </td>
-                            </tr> --}}
+                            </tr>
+                            <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-[#E0F7FF] dark:hover:bg-gray-700 transition duration-200">
+                                <td class="p-4">Gestión de Reportes Usuario</td>
+                                <td class="p-4">Administra los Reportes del sistema</td>
+                                <td class="p-4">
+                                    <a href="{{ route('admin.reportes.ticketsPorUsuario') }}" 
+                                       class="bg-[#00CFFF] hover:bg-[#009FCC] text-white font-bold py-1 px-3 rounded-lg transition duration-150">
+                                        Ver
+                                    </a>
+                                </td>
+                            </tr>
+                            
                             <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-[#E0F7FF] dark:hover:bg-gray-700 transition duration-200">
                                 <td class="p-4">Tickets</td>
                                 <td class="p-4">Consulta y gestiona todos los tickets del sistema</td>
